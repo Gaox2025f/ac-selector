@@ -24,7 +24,7 @@ function requestGet(url) {
     }
   }
 
-  var _option = {
+  option = {
     method: 'GET',
     // *GET, POST, PUT, DELETE, etc.
     cache: 'default',
@@ -38,7 +38,7 @@ function requestGet(url) {
     mode: 'cors' // no-cors, cors, *same-origin
 
   };
-  return fetch(url, _option).then(function (response) {
+  return fetch(url, option).then(function (response) {
     if (response.ok) {
       return response.json();
     } else {

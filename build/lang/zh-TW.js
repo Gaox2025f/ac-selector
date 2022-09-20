@@ -35,7 +35,8 @@ var zh_CN = {
   pleaseUser: '請輸入您要查找的用戶',
   // 请输入您要查找的角色
   pleaseRole: '請輸入您要查找的角色',
-  addMsgAcpt: '添加消息接收人'
+  addMsgAcpt: '添加消息接收人',
+  wechat: '微信'
 };
 var _default = zh_CN;
 exports["default"] = _default;

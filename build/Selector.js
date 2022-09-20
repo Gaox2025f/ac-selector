@@ -13,6 +13,8 @@ var langs = _interopRequireWildcard(require("./lang"));
 
 var _tinper = require("./components/tinper");
 
+require("./Selector.css");
+
 var _multiSelect = _interopRequireDefault(require("bee-table/build/lib/multiSelect"));
 
 var _colmuns = require("./colmuns");
@@ -101,7 +103,10 @@ var defaultProps = {
   },
   tabConfig: [],
   tableData: [],
-  treeConfig: []
+  treeConfig: [],
+  pageSize: 40,
+  isRule: true,
+  isOrg: true
 };
 
 var Selector =
@@ -122,11 +127,11 @@ function (_React$Component) {
           selectedOther = _this2$props.selectedOther;
 
       _this2.setState({
-        selectedUserData: selectedUser,
-        selectedOtherList: selectedOther
+        selectedUserData: (0, _utils.setUserReciving)(selectedUser),
+        selectedOtherList: (0, _utils.setOtherReciving)(selectedOther)
       });
 
-      var url = "".concat(_this2.state.prefixUrl, "/user/staff/search?pageSize=40&pageNo=1&keyword=");
+      var url = "".concat(_this2.state.prefixUrl, "/user/staff/search?pageSize=").concat(_this2.props.pageSize, "&pageNo=1&keyword=");
       (0, _request.requestGet)(url).then(function (response) {
         if (response.status === 1 && response.data !== null) {
           var selectedUserData = _this2.state.selectedUserData;
@@ -134,7 +139,7 @@ function (_React$Component) {
           var _newList = (0, _utils.resetChecked)(response.data.values, 'userid');
 
           var res = (0, _utils.setChecked)(_newList, selectedUserData, 'userid');
-          var completeRes = (0, _utils.addFullAttr)(res); // console.log(completeRes)
+          var completeRes = (0, _utils.addFullAttr)(res, _this2.props.locale); // console.log(completeRes)
 
           var obj = {
             activePage: response.data.currentPage,
@@ -159,9 +164,9 @@ function (_React$Component) {
       var url = '';
 
       if (activeKey === '1') {
-        url = "".concat(_this.state.prefixUrl, "/user/staff/search?pageSize=40&pageNo=1&keyword=").concat(e.target.value);
+        url = "".concat(_this.state.prefixUrl, "/user/staff/search?pageSize=").concat(_this2.props.pageSize, "&pageNo=1&keyword=").concat(e.target.value);
       } else if (activeKey === '2') {
-        url = "".concat(_this.state.prefixUrl, "/user/role/search?pageSize=40&pageNo=1&keyword=").concat(e.target.value);
+        url = "".concat(_this.state.prefixUrl, "/user/role/search?pageSize=").concat(_this2.props.pageSize, "&pageNo=1&keyword=").concat(e.target.value);
       }
 
       if (e.keyCode === 13 || e.keyCode === 108) {
@@ -176,7 +181,7 @@ function (_React$Component) {
               };
               _list = (0, _utils.resetChecked)(response.data.values, 'userid');
               _list = (0, _utils.setChecked)(response.data.values, _this2.state.selectedUserData, 'userid');
-              _list = (0, _utils.addFullAttr)(_list);
+              _list = (0, _utils.addFullAttr)(_list, _this2.props.locale);
 
               _this2.setState({
                 multiShowList: _list,
@@ -234,9 +239,9 @@ function (_React$Component) {
           roleInputValue = _this2$state.roleInputValue;
 
       if (activeKey === '1') {
-        searchUrl = "".concat(_this.state.prefixUrl, "/user/staff/search?pageSize=40&pageNo=1&keyword=").concat(staffInputValue);
+        searchUrl = "".concat(_this.state.prefixUrl, "/user/staff/search?pageSize=").concat(_this2.props.pageSize, "&pageNo=1&keyword=").concat(staffInputValue);
       } else {
-        searchUrl = "".concat(_this.state.prefixUrl, "/user/role/search?pageSize=40&pageNo=1&keyword=").concat(roleInputValue);
+        searchUrl = "".concat(_this.state.prefixUrl, "/user/role/search?pageSize=").concat(_this2.props.pageSize, "&pageNo=1&keyword=").concat(roleInputValue);
       }
 
       (0, _request.requestGet)(searchUrl).then(function (response) {
@@ -250,6 +255,7 @@ function (_React$Component) {
             };
             _list = (0, _utils.resetChecked)(response.data.values, 'userid');
             _list = (0, _utils.setChecked)(response.data.values, _this2.state.selectedUserData, 'userid');
+            _list = (0, _utils.addFullAttr)(_list, _this2.props.locale);
 
             _this2.setState({
               multiShowList: _list,
@@ -276,10 +282,8 @@ function (_React$Component) {
       });
     });
 
-    _defineProperty(_assertThisInitialized(_this2), "inputChange", function (e) {
-      _this2.setState({
-        "extends": e.target.value
-      });
+    _defineProperty(_assertThisInitialized(_this2), "inputChange", function (type, e) {
+      _this2.setState(_defineProperty({}, type, e.target.value));
     });
 
     _defineProperty(_assertThisInitialized(_this2), "hoverDelIcon", function () {
@@ -504,11 +508,93 @@ function (_React$Component) {
       });
     });
 
-    _defineProperty(_assertThisInitialized(_this2), "getExtend", function (data, record) {
+    _defineProperty(_assertThisInitialized(_this2), "getWeList", function (data, record) {
+      var typeCode = 4; //
+
       var _this2$state6 = _this2.state,
-          roleShowList = _this2$state6.roleShowList,
+          weArray = _this2$state6.weArray,
           defaultLabel = _this2$state6.defaultLabel,
-          selectedOtherList = _this2$state6.selectedOtherList;
+          selectedOtherList = _this2$state6.selectedOtherList; // console.log(data,record)
+
+      var delList = (0, _utils.getWeId)(data);
+
+      var _list = _toConsumableArray(selectedOtherList);
+
+      var tempList = _toConsumableArray(weArray); // let delList = getRoleId(data)
+
+
+      tempList = (0, _utils.resetChecked)(weArray, 'wxOpenId');
+      tempList = (0, _utils.setChecked)(weArray, data, 'wxOpenId'); //  console.log(data,record)
+
+      if (record === undefined) {
+        if (data.length) {
+          var weList = (0, _utils.getWeId)(_list);
+          data.forEach(function (t) {
+            if (!weList.includes(t.wxOpenId)) {
+              _list.push(Object.assign({}, t, {
+                key: t.wxOpenId,
+                type: defaultLabel,
+                typeCode: typeCode,
+                reciving: t.weChatId
+              }));
+            }
+          });
+        } else {
+          // 和用户页签取消全部选中逻辑相同
+          var deleteWeList = (0, _utils.getWeId)(weArray),
+              result = [];
+
+          _list.forEach(function (t) {
+            if (!deleteWeList.includes(t.wxOpenId)) {
+              result.push(t);
+            }
+          });
+
+          _list = [].concat(result);
+        }
+      } else {
+        var currItem = Object.assign({}, record, {
+          key: record.wxOpenId,
+          type: defaultLabel,
+          typeCode: typeCode,
+          reciving: record.weChatId
+        });
+
+        if (delList.includes(record.wxOpenId)) {
+          _list.push(currItem);
+        } else {
+          _list = _list.filter(function (t) {
+            if (t.wxOpenId !== record.wxOpenId) {
+              return t;
+            }
+          });
+        }
+      } // console.log(_list,tempList,_list.length)
+
+
+      _this2.setState({
+        selectedOtherList: _toConsumableArray(_list),
+        weArray: _toConsumableArray(tempList),
+        selectedOtherCount: _list.length
+      });
+
+      return;
+    });
+
+    _defineProperty(_assertThisInitialized(_this2), "weLeftSearch", function (e) {
+      _this2.setState({
+        weLeftVal: e.target.value,
+        weList: e.target.value ? _this2.state.weList.filter(function (item) {
+          return item.accountName.indexOf(e.target.value) != -1;
+        }) : _this2.state.weListDB
+      });
+    });
+
+    _defineProperty(_assertThisInitialized(_this2), "getExtend", function (data, record) {
+      var _this2$state7 = _this2.state,
+          roleShowList = _this2$state7.roleShowList,
+          defaultLabel = _this2$state7.defaultLabel,
+          selectedOtherList = _this2$state7.selectedOtherList;
 
       var _list = _toConsumableArray(selectedOtherList);
 
@@ -623,7 +709,7 @@ function (_React$Component) {
         staffInputValue: '',
         roleInputValue: '',
         orgSelectedKeys: [],
-        defaultLabel: '用户'
+        defaultLabel: i18n[_this2.props.locale].user
       });
     });
 
@@ -635,15 +721,17 @@ function (_React$Component) {
     });
 
     _defineProperty(_assertThisInitialized(_this2), "confirm", function () {
-      var _this2$state7 = _this2.state,
-          selectedUserData = _this2$state7.selectedUserData,
-          selectedOtherList = _this2$state7.selectedOtherList;
-      var userList = (0, _utils.mapUserList)(selectedUserData); // let otherList = mapOtherList(selectedOtherList)
+      var _this2$state8 = _this2.state,
+          selectedUserData = _this2$state8.selectedUserData,
+          selectedOtherList = _this2$state8.selectedOtherList;
+      var userList = (0, _utils.mapUserList)(selectedUserData);
+      var otherList = (0, _utils.mapOtherList)(selectedOtherList); // console.log(userList, otherList)
+      // console.log(selectedOtherList)
 
-      _this2.reset(); // console.log(userList, otherList)
+      _this2.props.onConfirm(userList, otherList); // this.props.onConfirm(selectedUserData, selectedOtherList)
 
 
-      _this2.props.onConfirm(userList, selectedOtherList);
+      _this2.reset();
     });
 
     _defineProperty(_assertThisInitialized(_this2), "tabHandleChange", function (lab) {
@@ -653,11 +741,20 @@ function (_React$Component) {
       });
     });
 
+    _defineProperty(_assertThisInitialized(_this2), "weIndexChange", function (id) {
+      _this2.setState({
+        weIndex: id
+      }); ////////
+
+
+      _this2.weGetData(id);
+    });
+
     _defineProperty(_assertThisInitialized(_this2), "onChange", function (activeKey, node) {
       // console.log(activeKey,node)
       var _this = _assertThisInitialized(_this2);
 
-      if (activeKey < 4) {
+      if (activeKey <= 4) {
         _this2.setState({
           "extends": '',
           activeKey: activeKey,
@@ -673,14 +770,38 @@ function (_React$Component) {
       });
 
       if (activeKey === '1') {
-        _this2.didFinish();
+        var url = "".concat(_this2.state.prefixUrl, "/user/staff/search?pageSize=").concat(_this2.props.pageSize, "&pageNo=1&keyword=");
+        (0, _request.requestGet)(url).then(function (response) {
+          if (response.status === 1 && response.data !== null) {
+            var selectedUserData = _this2.state.selectedUserData;
+
+            var _newList = (0, _utils.resetChecked)(response.data.values, 'userid');
+
+            var res = (0, _utils.setChecked)(_newList, selectedUserData, 'userid');
+            var completeRes = (0, _utils.addFullAttr)(res, _this2.props.locale); // console.log(completeRes)
+
+            var obj = {
+              activePage: response.data.currentPage,
+              items: response.data.totalPages,
+              total: response.data.pageSize
+            };
+
+            _this2.setState({
+              multiShowList: completeRes,
+              staffPage: obj
+            });
+          }
+        })["catch"](function (error) {
+          throw new Error(error);
+        });
       }
 
       if (activeKey === '2') {
-        var url = "".concat(_this.state.prefixUrl, "/user/role/search?pageSize=40&pageNo=1&keyword="); // let { roleShowList } = this.state
+        var _url = "".concat(_this.state.prefixUrl, "/user/role/search?pageSize=").concat(_this2.props.pageSize, "&pageNo=1&keyword="); // let { roleShowList } = this.state
         // if (!roleShowList.length) {
 
-        (0, _request.requestGet)(url).then(function (response) {
+
+        (0, _request.requestGet)(_url).then(function (response) {
           if (response.status === 1) {
             var selectedOtherList = _this2.state.selectedOtherList;
             var _page = {
@@ -707,9 +828,9 @@ function (_React$Component) {
       } else if (activeKey === '3') {
         var selectedOtherList = _this2.state.selectedOtherList;
 
-        var _url = "".concat(_this.state.prefixUrl, "/user/org/list?pageSize=40&pageNo=1&orgIds=");
+        var _url2 = "".concat(_this.state.prefixUrl, "/user/org/list?pageSize=40&pageNo=1&orgIds=");
 
-        (0, _request.requestGet)(_url).then(function (response) {
+        (0, _request.requestGet)(_url2).then(function (response) {
           if (response.status === 1) {
             _this2.setState({
               orgTreeList: response.data
@@ -743,9 +864,9 @@ function (_React$Component) {
             ruleMenuList: (0, _utils.transferToMenu)(_this2.props.ruleList)
           });
         } else {
-          var _url2 = "".concat(_this.state.prefixUrl, "/user/rules?documentNo=").concat(_this2.props.documentNo, "&documentName=").concat(_this2.props.documentName);
+          var _url3 = "".concat(_this.state.prefixUrl, "/user/rules?documentNo=").concat(_this2.props.documentNo, "&documentName=").concat(_this2.props.documentName);
 
-          (0, _request.requestGet)(_url2).then(function (response) {
+          (0, _request.requestGet)(_url3).then(function (response) {
             if (response.status === 1) {
               var menuList = [{
                 id: 'root-0',
@@ -762,10 +883,58 @@ function (_React$Component) {
           });
         }
       }
+
+      if (activeKey === '0') {
+        var _url4 = "".concat(_this.state.prefixUrl, "/user/wechat/accounts");
+
+        (0, _request.requestGet)(_url4).then(function (res) {
+          var id = res.data && res.data[0] ? res.data[0].accountId : '';
+
+          _this2.setState({
+            weListDB: res.data,
+            weList: res.data,
+            weIndex: id
+          });
+
+          if (id) {
+            _this2.weGetData(id);
+          }
+        });
+      }
+    });
+
+    _defineProperty(_assertThisInitialized(_this2), "weGetData", function (id) {
+      var keyWords = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+      var url = "".concat(_this2.state.prefixUrl, "/user/wechat/users?accountId=").concat(id, "&keyWords=").concat(keyWords);
+      (0, _request.requestGet)(url).then(function (res) {
+        // console.log(res)
+        var _newList = (0, _utils.resetChecked)(res.data, 'wxOpenId');
+
+        var list = (0, _utils.setChecked)(_newList, _this2.state.selectedOtherList, 'wxOpenId'); // console.log(_newList)
+
+        _this2.setState({
+          weArray: list
+        });
+      });
+    });
+
+    _defineProperty(_assertThisInitialized(_this2), "weSearchAc", function (e) {
+      _this2.setState({
+        weSearchVal: e.target.value
+      });
+    });
+
+    _defineProperty(_assertThisInitialized(_this2), "weSearchUp", function (e) {
+      if (e.keyCode == 13) {
+        _this2.weGetData(_this2.state.weIndex, _this2.state.weSearchVal);
+      }
     });
 
     _defineProperty(_assertThisInitialized(_this2), "treeOnSelect", function (info) {
-      var url = "".concat(_this2.state.prefixUrl, "//user/org/user?pageSize=40&pageNo=1&orgIds=['").concat(info, "']");
+      var _info = encodeURI("[".concat(info, "]")); // console.log(_info)
+
+
+      var url = "".concat(_this2.state.prefixUrl, "/user/org/user?pageSize=40&pageNo=1&orgIds=").concat(_info);
       (0, _request.requestGet)(url).then(function (response) {
         if (response.status === 1) {
           var _newList = (0, _utils.resetChecked)(response.data, 'userid');
@@ -843,7 +1012,7 @@ function (_React$Component) {
     _defineProperty(_assertThisInitialized(_this2), "roleSelect", function (e) {
       var _this = _assertThisInitialized(_this2);
 
-      var url = "".concat(_this.state.prefixUrl, "/user/role/search?pageSize=40&pageNo=").concat(e, "&keyword=");
+      var url = "".concat(_this.state.prefixUrl, "/user/role/search?pageSize=").concat(_this2.props.pageSize, "&pageNo=").concat(e, "&keyword=");
       var selectedOtherList = _this2.state.selectedOtherList;
       (0, _request.requestGet)(url).then(function (response) {
         if (response.status === 1 && response.data !== null) {
@@ -868,8 +1037,9 @@ function (_React$Component) {
     _defineProperty(_assertThisInitialized(_this2), "staffSelect", function (e) {
       var _this = _assertThisInitialized(_this2);
 
-      var url = "".concat(_this.state.prefixUrl, "/user/staff/search?pageSize=40&pageNo=").concat(e, "&keyword=");
+      var url = "".concat(_this.state.prefixUrl, "/user/staff/search?pageSize=").concat(_this2.props.pageSize, "&pageNo=").concat(e, "&keyword=");
       (0, _request.requestGet)(url).then(function (response) {
+        // console.log(response)
         if (response.status === 1 && response.data !== null) {
           var obj = {
             activePage: e,
@@ -877,8 +1047,9 @@ function (_React$Component) {
             total: response.data.pageSize
           };
           var res = (0, _utils.resetChecked)(response.data.values, 'userid');
-          res = (0, _utils.setChecked)(res, _this2.state.selectedUserData, 'userid');
-          var completeRes = (0, _utils.addFullAttr)(res);
+          res = (0, _utils.setChecked)(res, _this2.state.selectedUserData, 'userid'); // console.log('//////',res)
+
+          var completeRes = (0, _utils.addFullAttr)(res, _this2.props.locale);
 
           _this2.setState({
             staffPage: obj,
@@ -892,6 +1063,7 @@ function (_React$Component) {
 
     _defineProperty(_assertThisInitialized(_this2), "menuClick", function (_ref) {
       var key = _ref.key;
+      // debugger
       var parsedKey = (0, _utils.decodeMenukey)(key);
       var selectedOtherList = _this2.state.selectedOtherList;
 
@@ -1028,7 +1200,7 @@ function (_React$Component) {
 
     _this2.orgTreeList = []; // 备份完整的组织树
 
-    _this2.state = {
+    _this2.state = _defineProperty({
       locale: props.locale,
       show: false,
       filterIndex: '',
@@ -1041,7 +1213,7 @@ function (_React$Component) {
       // 已选用户
       selectedOtherList: [],
       // 已选非用户List
-      defaultLabel: '用户',
+      defaultLabel: i18n[props.locale].user,
       // 默认显示的标签页
       multiShowList: [],
       // 用户列表
@@ -1077,8 +1249,16 @@ function (_React$Component) {
       autoExpandParent: true,
       exendTreeList: [],
       orgTreeExpandedKeys: [],
-      autoTreeExpandParent: true
-    };
+      autoTreeExpandParent: true,
+      weList: [],
+      //公众号
+      weListDB: [],
+      weArray: [],
+      //对应数据
+      weIndex: '',
+      weLeftVal: '',
+      weSearchVal: ''
+    }, "prefixUrl", props.prefixUrl);
     return _this2;
   }
 
@@ -1109,45 +1289,10 @@ function (_React$Component) {
   }, {
     key: "componentDidMount",
     value: function componentDidMount() {
-      var mode = this.props.mode;
-
-      switch (mode) {
-        case 'dev':
-          this.setState({
-            prefixUrl: 'http://iuap-message-platform-web.test.app.yyuap.com/message-platform-web'
-          });
-          break;
-
-        case 'daily':
-          this.setState({
-            prefixUrl: 'https://u8cmsg-daily.yyuap.com/message-platform-web'
-          });
-          break;
-
-        case 'pre':
-          this.setState({
-            prefixUrl: 'https://msg-y3me-pre.diwork.com/message-platform-web'
-          });
-          break;
-
-        case 'diwork':
-          this.setState({
-            prefixUrl: 'https://msg-y3me-daily.yyuap.com/message-platform-web'
-          });
-          break;
-
-        case 'diwork-prod':
-          this.setState({
-            prefixUrl: 'https://message-yonsuite.diwork.com/message-platform-web'
-          });
-          break;
-
-        default:
-          this.setState({
-            prefixUrl: 'https://u8cmsg-daily.yyuap.com/message-platform-web'
-          });
-          break;
-      }
+      // const { mode } = this.props
+      this.setState({
+        prefixUrl: this.props.prefixUrl
+      });
     } // 进入modal首先加载用户列表
 
   }, {
@@ -1157,8 +1302,18 @@ function (_React$Component) {
 
       var _this = this;
 
-      var locale = this.state.locale;
-      var tabConfig = this.props.tabConfig;
+      var _this$state = this.state,
+          locale = _this$state.locale,
+          weArray = _this$state.weArray,
+          weList = _this$state.weList,
+          weIndex = _this$state.weIndex,
+          weLeftVal = _this$state.weLeftVal,
+          weSearchVal = _this$state.weSearchVal;
+      var _this$props = this.props,
+          tabConfig = _this$props.tabConfig,
+          isWechat = _this$props.isWechat,
+          isRule = _this$props.isRule,
+          isOrg = _this$props.isOrg;
 
       var loopData = function loopData(data) {
         return data.map(function (item) {
@@ -1203,6 +1358,7 @@ function (_React$Component) {
       return _react["default"].createElement(_tinper.Modal, {
         onEntered: _this.didFinish,
         onHide: _this.close,
+        container: _this.props.container,
         show: _this.state.show,
         width: 1200,
         className: 'selectModalContainer',
@@ -1217,7 +1373,7 @@ function (_React$Component) {
       }, _react["default"].createElement("div", {
         className: 'selectContainer clearfix'
       }, _react["default"].createElement("div", {
-        className: 'left',
+        className: 'rc-s-left',
         id: 'user'
       }, _react["default"].createElement(_tinper.Tabs, {
         defaultActiveKey: '1',
@@ -1236,7 +1392,7 @@ function (_React$Component) {
         onKeyUp: _this.search // placeholder={'请输入您要查找的用户'}
         ,
         placeholder: i18n[locale].pleaseUser,
-        className: 'search'
+        className: 'rc-s-search'
       }), _react["default"].createElement(_tinper.Icon, {
         onClick: _this.clickSearch,
         className: 'searchIcon',
@@ -1259,6 +1415,7 @@ function (_React$Component) {
         last: true,
         prev: true,
         next: true,
+        locale: _colmuns.pageLocale[this.props.locale],
         maxButtons: 5,
         boundaryLinks: true,
         total: _this.state.staffPage.total,
@@ -1276,7 +1433,7 @@ function (_React$Component) {
         type: "text",
         placeholder: i18n[locale].pleaseRole,
         onKeyUp: _this.search,
-        className: 'search'
+        className: 'rc-s-search'
       }), _react["default"].createElement(_tinper.Icon, {
         onClick: _this.clickSearch,
         className: 'searchIcon',
@@ -1286,7 +1443,7 @@ function (_React$Component) {
         scroll: {
           y: 210
         },
-        columns: (0, _colmuns.roleMultiCol)(locale),
+        columns: _colmuns.roleMultiCol[locale],
         multiSelect: _utils.multiSelectType,
         getSelectedDataFunc: _this.getRoleList,
         data: _this.state.roleShowList,
@@ -1299,13 +1456,14 @@ function (_React$Component) {
         last: true,
         prev: true,
         next: true,
+        locale: _colmuns.pageLocale[this.props.locale],
         maxButtons: 5,
         boundaryLinks: true,
         total: _this.state.rolePage.total,
         activePage: _this.state.rolePage.activePage,
         items: _this.state.rolePage.items,
         onSelect: _this.roleSelect
-      })), _react["default"].createElement(TabPane, {
+      })), isOrg ? _react["default"].createElement(TabPane, {
         tab: i18n[locale].org,
         key: 3
       }, _react["default"].createElement("div", {
@@ -1314,7 +1472,7 @@ function (_React$Component) {
         onChange: _this.searchOrg // placeholder={'请输入您要查找的组织'}
         ,
         placeholder: i18n[locale].pleaseOrg,
-        className: 'search'
+        className: 'rc-s-search'
       }), _react["default"].createElement(_tinper.Icon, {
         onClick: _this.clickSearch,
         className: 'searchIcon',
@@ -1345,7 +1503,7 @@ function (_React$Component) {
         emptyText: function emptyText() {
           return _this.props.emptyText(i18n[locale].noData);
         }
-      })))), _react["default"].createElement(TabPane, {
+      })))) : null, isRule ? _react["default"].createElement(TabPane, {
         tab: i18n[locale].rule,
         key: 4
       }, _react["default"].createElement("div", {
@@ -1353,7 +1511,7 @@ function (_React$Component) {
       }, _react["default"].createElement("input", {
         // placeholder={'请输入您要查找的规则'}
         placeholder: i18n[locale].pleaseRule,
-        className: 'search'
+        className: 'rc-s-search'
       }), _react["default"].createElement(_tinper.Icon, {
         className: 'searchIcon',
         type: "uf-search"
@@ -1362,7 +1520,63 @@ function (_React$Component) {
       }, _react["default"].createElement(_tinper.Menu, {
         mode: 'inline',
         onClick: _this.menuClick
-      }, _this.state.ruleMenuList))), tabConfig.map(function (item, index) {
+      }, _this.state.ruleMenuList))) : null, isWechat ? _react["default"].createElement(TabPane, {
+        tab: i18n[locale].wechat,
+        key: 0
+      }, _react["default"].createElement("div", {
+        className: 'we-box'
+      }, _react["default"].createElement("div", {
+        className: 'we-left'
+      }, _react["default"].createElement("div", {
+        className: 'we-searchWrapper'
+      }, _react["default"].createElement("input", {
+        value: weLeftVal,
+        onChange: this.weLeftSearch,
+        type: "text",
+        className: 'rc-s-search-sm'
+      }), _react["default"].createElement(_tinper.Icon, {
+        onClick: _this.weLeftSearch,
+        className: 'searchIcon-sm',
+        type: "uf-search"
+      })), _react["default"].createElement("ul", {
+        className: 'we-list'
+      }, weList.map(function (item) {
+        return _react["default"].createElement("li", null, _react["default"].createElement("span", {
+          className: weIndex === item.accountId ? 'we-click' : '',
+          onClick: function onClick() {
+            return _this3.weIndexChange(item.accountId);
+          }
+        }, item.accountName));
+      }))), _react["default"].createElement("div", {
+        className: 'we-r'
+      }, _react["default"].createElement("div", {
+        className: 'we-searchWrapper'
+      }, _react["default"].createElement("input", {
+        type: "text",
+        value: weSearchVal,
+        onChange: this.weSearchAc,
+        onKeyUp: this.weSearchUp,
+        className: 'rc-s-search'
+      }), _react["default"].createElement(_tinper.Icon, {
+        onClick: function onClick() {
+          return _this3.weGetData(weIndex, weSearchVal);
+        },
+        className: 'searchIcon',
+        type: "uf-search"
+      })), _react["default"].createElement("div", null, _react["default"].createElement(MultiSelectTable, {
+        id: 'wechat',
+        className: 'wechaTable',
+        scroll: {
+          y: 210
+        },
+        columns: _colmuns.wechatMultiCol[locale],
+        multiSelect: _utils.multiSelectType,
+        getSelectedDataFunc: _this.getWeList,
+        data: _this.state.weArray,
+        emptyText: function emptyText() {
+          return _this.props.emptyText(i18n[locale].noData);
+        }
+      }))))) : null, tabConfig.map(function (item, index) {
         if (item.tabType === 'table') {
           return _react["default"].createElement(TabPane, {
             id: item.tabMark,
@@ -1381,13 +1595,13 @@ function (_React$Component) {
             className: 'searchWrapper'
           }, _react["default"].createElement("input", {
             value: _this.state["extends"],
-            onChange: _this.inputChange,
+            onChange: _this.inputChange.bind(_this3, 'extends'),
             type: "text",
             onKeyUp: function onKeyUp(e) {
               return item.tableConfig.enterSearchFunc(item.tabMark, e);
             },
             placeholder: item.tableConfig.searchPlaceholder,
-            className: 'search'
+            className: 'rc-s-search'
           }), _react["default"].createElement(_tinper.Icon, {
             onClick: function onClick(e) {
               return item.tableConfig.clickSearchFunc(item.tabMark, e);
@@ -1412,6 +1626,7 @@ function (_React$Component) {
             last: true,
             prev: true,
             next: true,
+            locale: _colmuns.pageLocale[_this3.props.locale],
             maxButtons: 5,
             boundaryLinks: true,
             total: _this.props.pageTotal,
@@ -1427,7 +1642,8 @@ function (_React$Component) {
           var _React$createElement;
 
           return _react["default"].createElement(TabPane, (_React$createElement = {
-            tab: item.tabName
+            tab: item.tabName // @ts-ignore
+
           }, _defineProperty(_React$createElement, "tab", _react["default"].createElement("div", {
             style: {
               height: '100%'
@@ -1443,7 +1659,7 @@ function (_React$Component) {
             onChange: _this.searchOrgTree // placeholder={'请输入您要查找的组织'}
             ,
             placeholder: i18n[locale].pleaseOrg,
-            className: 'search'
+            className: 'rc-s-search'
           }), _react["default"].createElement(_tinper.Icon, {
             onClick: _this.clickSearch,
             className: 'searchIcon',
@@ -1470,7 +1686,7 @@ function (_React$Component) {
           }, loopData(_this.state.exendTreeList)))));
         }
       }))), _react["default"].createElement("div", {
-        className: 'right'
+        className: 'rc-s-right'
       }, _react["default"].createElement("div", null, _react["default"].createElement("div", {
         className: "selectedUser clearfix"
       }, _react["default"].createElement("p", {
@@ -1479,7 +1695,7 @@ function (_React$Component) {
         className: 'flr mt12'
       }, _react["default"].createElement("span", {
         className: 'color-selected'
-      }, i18n[locale].choose, "\uFF1A", _this.state.selectedCount), _react["default"].createElement("span", {
+      }, i18n[locale].choose, "\uFF1A", _this.state.selectedUserData.length), _react["default"].createElement("span", {
         className: 'clear',
         onClick: _this.deSelectAll.bind(this, 1)
       }, i18n[locale].clean))), _react["default"].createElement(_tinper.Table, {
@@ -1501,7 +1717,7 @@ function (_React$Component) {
         className: 'flr mt12'
       }, _react["default"].createElement("span", {
         className: 'color-selected'
-      }, i18n[locale].choose, "\uFF1A", _this.state.selectedOtherCount), _react["default"].createElement("span", {
+      }, i18n[locale].choose, "\uFF1A", _this.state.selectedOtherList.length), _react["default"].createElement("span", {
         className: 'clear',
         onClick: _this.deSelectAll.bind(this, 0)
       }, i18n[locale].clean))), _react["default"].createElement(_tinper.Table, {

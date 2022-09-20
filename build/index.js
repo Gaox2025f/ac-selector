@@ -5,9 +5,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _selector = _interopRequireDefault(require("./selector"));
+var _Selector = _interopRequireDefault(require("./Selector"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _default = _selector["default"];
+var _default = _Selector["default"];
 exports["default"] = _default;
